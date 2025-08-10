@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { z } from "zod";
-import { translateWithOllama } from "./translate-ollama";
+import { adapter } from "./adapter";
 
 dotenv.config();
 const app = express();
@@ -15,17 +15,17 @@ const TranslateSchema = z.object({
 	text: z.string().min(1),
 });
 
+app.get("/health", (_, res) => {
+	res.json({ backend: process.env.MODEL_BACKEND || "ollama", ok: true });
+});
+
 app.post("/translate", async (req, res) => {
 	const parsed = TranslateSchema.safeParse(req.body);
 	if (!parsed.success)
 		return res.status(400).json({ error: parsed.error.format() });
-
 	try {
-		const result = await translateWithOllama(
-			parsed.data.fromLang,
-			parsed.data.toLang,
-			parsed.data.text
-		);
+		const { fromLang, toLang, text } = parsed.data;
+		const result = await adapter.translate(fromLang, toLang, text);
 		res.json(result);
 	} catch (e: any) {
 		console.error(e);
@@ -33,7 +33,9 @@ app.post("/translate", async (req, res) => {
 	}
 });
 
-const port = process.env.PORT || 4000;
+const port = Number(process.env.PORT || 4000);
 app.listen(port, () =>
-	console.log(`meditongue-api running on http://localhost:${port}`)
+	console.log(
+		`meditongue-api on http://localhost:${port} (backend=${process.env.MODEL_BACKEND})`
+	)
 );
