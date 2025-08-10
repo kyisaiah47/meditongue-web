@@ -264,7 +264,7 @@ export default function Home() {
 							<SheetHeader>
 								<SheetTitle>Settings</SheetTitle>
 							</SheetHeader>
-							<div className="mt-4 space-y-3 text-sm">
+							<div className="mt-4 space-y-3 text-sm px-4">
 								<div className="flex justify-between">
 									<span>Backend</span>
 									<span className="font-medium">{health?.backend ?? "—"}</span>
