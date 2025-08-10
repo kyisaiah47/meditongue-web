@@ -102,6 +102,28 @@ export default function Home() {
 	const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
 	const sameLang = useMemo(() => leftLang === rightLang, [leftLang, rightLang]);
 
+	const [online, setOnline] = useState<boolean>(true);
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		setOnline(navigator.onLine);
+		const on = () => setOnline(true);
+		const off = () => setOnline(false);
+		window.addEventListener("online", on);
+		window.addEventListener("offline", off);
+		return () => {
+			window.removeEventListener("online", on);
+			window.removeEventListener("offline", off);
+		};
+	}, []);
+
+	const isLocalBase =
+		!!health?.baseUrl &&
+		(health.baseUrl.startsWith("http://localhost") ||
+			health.baseUrl.startsWith("http://127.0.0.1"));
+
+	const offlineMode = isLocalBase && !online;
+
 	const isEmergency = useMemo(
 		() => leftFlags.includes("EMERGENCY") || rightFlags.includes("EMERGENCY"),
 		[leftFlags, rightFlags]
@@ -241,9 +263,35 @@ export default function Home() {
 					<Badge variant="secondary">
 						{health?.backend ? `Backend: ${health.backend}` : "Backend: …"}
 					</Badge>
+
 					{lastLatencyMs != null && (
 						<Badge title="Last request latency">{lastLatencyMs} ms</Badge>
 					)}
+
+					{/* Offline mode badge */}
+					{offlineMode ? (
+						<Badge
+							className="bg-green-100 text-green-800 border border-green-200"
+							title="Local API + no internet connection"
+						>
+							Offline mode
+						</Badge>
+					) : isLocalBase ? (
+						<Badge
+							className="bg-amber-100 text-amber-900 border border-amber-200"
+							title="Local API, internet currently available"
+						>
+							Local
+						</Badge>
+					) : (
+						<Badge
+							className="bg-slate-100 text-slate-800 border border-slate-200"
+							title="Remote API base URL detected"
+						>
+							Remote
+						</Badge>
+					)}
+
 					<Badge variant={health?.ok ? "default" : "destructive"}>
 						{health?.ok ? "API ✓" : "API ✗"}
 					</Badge>
