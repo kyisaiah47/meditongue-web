@@ -22,12 +22,6 @@ Built for **field healthcare**, rural clinics, and low-connectivity environments
 
 ---
 
-## 📸 Demo
-![Screenshot](docs/demo.png)  
-![Emergency Flag](docs/emergency.png)  
-
----
-
 ## 🛠 Built With
 - **Frontend:** Next.js, TailwindCSS, shadcn/ui
 - **Backend API:** Node.js + Express
