@@ -16,15 +16,21 @@ const TranslateSchema = z.object({
 });
 
 app.get("/health", (_, res) => {
+	const backend = process.env.MODEL_BACKEND || "ollama";
+	let model = "";
+
+	if (backend === "openai") {
+		model = process.env.OPENAI_MODEL || "";
+	} else if (backend === "ollama") {
+		model = process.env.OLLAMA_MODEL || "";
+	}
+
 	res.json({
-		backend: process.env.MODEL_BACKEND || "ollama",
+		backend,
 		ok: true,
-		model:
-			process.env.MODEL_BACKEND === "openai"
-				? process.env.OPENAI_MODEL || ""
-				: process.env.OLLAMA_MODEL || "",
+		model,
 		baseUrl:
-			process.env.MODEL_BACKEND === "openai"
+			backend === "openai"
 				? process.env.OPENAI_BASE_URL || ""
 				: process.env.OLLAMA_URL || "",
 	});

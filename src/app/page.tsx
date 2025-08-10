@@ -35,11 +35,11 @@ type Health = {
 } | null;
 
 const LANGS = [
-	{ code: "en", label: "English" },
-	{ code: "es", label: "Spanish" },
-	{ code: "ar", label: "Arabic" },
-	{ code: "fr", label: "French" },
-	{ code: "zh", label: "Chinese (Simplified)" },
+	{ code: "en", label: "🇺🇸 English" },
+	{ code: "es", label: "🇪🇸 Spanish" },
+	{ code: "ar", label: "🇦🇪 Arabic" },
+	{ code: "fr", label: "🇫🇷 French" },
+	{ code: "zh", label: "🇨🇳 Chinese (Simplified)" },
 ];
 
 // quick phrasebook: add more pairs as needed
@@ -241,12 +241,13 @@ export default function Home() {
 					<Badge variant="secondary">
 						{health?.backend ? `Backend: ${health.backend}` : "Backend: …"}
 					</Badge>
-					<Badge variant={health?.ok ? "default" : "destructive"}>
-						{health?.ok ? "API ✓" : "API ✗"}
-					</Badge>
 					{lastLatencyMs != null && (
 						<Badge title="Last request latency">{lastLatencyMs} ms</Badge>
 					)}
+					<Badge variant={health?.ok ? "default" : "destructive"}>
+						{health?.ok ? "API ✓" : "API ✗"}
+					</Badge>
+
 					<Sheet>
 						<SheetTrigger asChild>
 							<Button
@@ -336,11 +337,10 @@ export default function Home() {
 				<div className="mb-4 flex flex-wrap gap-2">
 					{phrases.map((p, i) => (
 						<Button
-							key={i}
 							size="sm"
 							variant="secondary"
+							className="shadow-sm"
 							onClick={() => setLeftText(p)}
-							title="Insert phrase on the left"
 						>
 							{p}
 						</Button>
@@ -402,7 +402,7 @@ export default function Home() {
 					{leftTerms.length > 0 && (
 						<div className="mt-3 text-xs">
 							<div className="mb-1 font-medium">Terms</div>
-							<div className="flex flex-wrap gap-2">
+							<div className="flex flex-wrap gap-2 bg-muted p-2 rounded-lg">
 								{leftTerms.map((t, i) => (
 									<span
 										key={i}
@@ -490,15 +490,7 @@ export default function Home() {
 	);
 }
 
-function LangSelect({
-	label,
-	value,
-	onChange,
-}: {
-	label: string;
-	value: string;
-	onChange: (v: string) => void;
-}) {
+function LangSelect({ label, value, onChange }) {
 	return (
 		<div className="flex items-center gap-2">
 			<span className="text-sm">{label}</span>
