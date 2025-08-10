@@ -303,9 +303,12 @@ export default function Home() {
 			</div>
 
 			{isEmergency && (
-				<div className="mb-4 rounded-xl border border-red-500 bg-red-50 p-3 text-sm text-red-800">
-					<b>EMERGENCY FLAGGED:</b> Consider urgent evaluation (e.g., chest
-					pain, severe breathing issues).
+				<div className="mb-4 flex items-center gap-2 rounded-xl border border-red-500 bg-red-100 p-3 text-sm text-red-900 shadow-sm">
+					<span className="text-lg">🚨</span>
+					<div>
+						<b>EMERGENCY FLAGGED:</b> Consider urgent evaluation (e.g., chest
+						pain, severe breathing issues).
+					</div>
 				</div>
 			)}
 
@@ -334,12 +337,13 @@ export default function Home() {
 
 			{/* Emergency Phrasebook */}
 			{phrases.length > 0 && (
-				<div className="mb-4 flex flex-wrap gap-2">
+				<div className="mb-4 flex gap-2 overflow-x-auto pb-2">
 					{phrases.map((p, i) => (
 						<Button
+							key={i}
 							size="sm"
 							variant="secondary"
-							className="shadow-sm"
+							className="flex-shrink-0 shadow-sm"
 							onClick={() => setLeftText(p)}
 						>
 							{p}
@@ -351,7 +355,9 @@ export default function Home() {
 			{/* two-pane layout */}
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<Card className="p-4">
-					<h2 className="text-sm font-medium">Doctor / Side A ({leftLang})</h2>
+					<h2 className="text-sm font-medium">
+						Doctor / Side A — {LANGS.find((l) => l.code === leftLang)?.label}
+					</h2>
 					<Separator className="my-3" />
 					<Label
 						htmlFor="leftArea"
@@ -406,7 +412,7 @@ export default function Home() {
 								{leftTerms.map((t, i) => (
 									<span
 										key={i}
-										className="rounded-full border px-2 py-1"
+										className="rounded-full bg-muted px-2 py-1 text-xs shadow-sm"
 										title={t.note || ""}
 									>
 										{t.source} → {t.target}
@@ -419,7 +425,7 @@ export default function Home() {
 
 				<Card className="p-4">
 					<h2 className="text-sm font-medium">
-						Patient / Side B ({rightLang})
+						Patient / Side B — {LANGS.find((l) => l.code === rightLang)?.label}
 					</h2>
 					<Separator className="my-3" />
 					<Label
