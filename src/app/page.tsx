@@ -6,10 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeftRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeftRight, Settings } from "lucide-react";
 import { toast } from "sonner";
 
-// shadcn Select components
 import {
 	Select,
 	SelectContent,
@@ -18,7 +18,21 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
+
 type Term = { source: string; target: string; note?: string };
+type Health = {
+	backend: string;
+	ok: boolean;
+	model?: string;
+	baseUrl?: string;
+} | null;
 
 const LANGS = [
 	{ code: "en", label: "English" },
@@ -27,6 +41,50 @@ const LANGS = [
 	{ code: "fr", label: "French" },
 	{ code: "zh", label: "Chinese (Simplified)" },
 ];
+
+// quick phrasebook: add more pairs as needed
+const PHRASEBOOK: Record<string, string[]> = {
+	"en->es": [
+		"I have chest pain.",
+		"I am short of breath.",
+		"I am allergic to penicillin.",
+		"I am pregnant.",
+		"Where is the pain located?",
+	],
+	"es->en": [
+		"Tengo dolor en el pecho.",
+		"Me falta el aire.",
+		"Soy alérgico a la penicilina.",
+		"Estoy embarazada.",
+		"¿Dónde está el dolor?",
+	],
+	"en->ar": [
+		"I have chest pain.",
+		"I am short of breath.",
+		"I am allergic to penicillin.",
+		"I am pregnant.",
+		"Where is the pain located?",
+	],
+	"ar->en": [
+		"عندي ألم في الصدر.",
+		"أشعر بضيق في التنفس.",
+		"أنا لدي حساسية من البنسلين.",
+		"أنا حامل.",
+		"أين يقع الألم؟",
+	],
+};
+
+// ultra‑light language guesser for demo warnings
+function guessLang(s: string): "ar" | "zh" | "es" | "fr" | "en" | null {
+	const t = s.trim();
+	if (!t) return null;
+	if (/[\u0600-\u06FF]/.test(t)) return "ar";
+	if (/[\u4E00-\u9FFF]/.test(t)) return "zh";
+	// crude Spanish/French hints
+	if (/\b(el|la|los|las|de|y|pero|porque)\b/i.test(t)) return "es";
+	if (/\b(le|la|les|des|et|mais|parce que)\b/i.test(t)) return "fr";
+	return "en";
+}
 
 export default function Home() {
 	const [leftLang, setLeftLang] = useState("en");
@@ -39,12 +97,39 @@ export default function Home() {
 	const [rightFlags, setRightFlags] = useState<string[]>([]);
 	const [busy, setBusy] = useState(false);
 
+	// settings / health
+	const [health, setHealth] = useState<Health>(null);
+	const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
 	const sameLang = useMemo(() => leftLang === rightLang, [leftLang, rightLang]);
 
 	const isEmergency = useMemo(
 		() => leftFlags.includes("EMERGENCY") || rightFlags.includes("EMERGENCY"),
 		[leftFlags, rightFlags]
 	);
+
+	async function fetchHealth() {
+		try {
+			const r = await fetch("http://localhost:4000/health");
+			const j = await r.json();
+			setHealth({
+				backend: j.backend ?? "unknown",
+				ok: !!j.ok,
+				model: j.model,
+				baseUrl: j.baseUrl,
+			});
+		} catch {
+			setHealth({ backend: "unknown", ok: false });
+		}
+	}
+
+	useEffect(() => {
+		fetchHealth();
+	}, []);
+
+	useEffect(() => {
+		if (isEmergency)
+			toast.error("🚨 EMERGENCY flagged: Consider urgent evaluation.");
+	}, [isEmergency]);
 
 	const swap = () => {
 		if (sameLang) return;
@@ -58,24 +143,29 @@ export default function Home() {
 		setRightFlags(leftFlags);
 	};
 
-	useEffect(() => {
-		if (isEmergency) {
-			toast.error("🚨 EMERGENCY flagged: Consider urgent evaluation.");
-		}
-	}, [isEmergency]);
-
 	async function copyLeft() {
 		await navigator.clipboard.writeText(leftText);
-		toast("Copied left pane text.");
+		toast.success("Copied left pane text.");
 	}
 
 	async function copyRight() {
 		await navigator.clipboard.writeText(rightText);
-		toast("Copied right pane text.");
+		toast.success("Copied right pane text.");
+	}
+
+	function warnIfLangMismatch(text: string, selected: string) {
+		const g = guessLang(text);
+		if (g && g !== selected) {
+			toast("Language mismatch?", {
+				description: `Detected ${g.toUpperCase()} but source is ${selected.toUpperCase()}`,
+			});
+		}
 	}
 
 	async function translateLeftToRight() {
+		warnIfLangMismatch(leftText, leftLang);
 		setBusy(true);
+		const t0 = performance.now();
 		try {
 			const res = await fetch("http://localhost:4000/translate", {
 				method: "POST",
@@ -95,13 +185,19 @@ export default function Home() {
 			setRightText("[Error translating]");
 			setRightTerms([]);
 			setRightFlags([]);
+			toast.error("Translation failed (left → right).");
 		} finally {
+			const dt = performance.now() - t0;
+			setLastLatencyMs(Math.round(dt));
 			setBusy(false);
+			fetchHealth(); // refresh backend info after a call
 		}
 	}
 
 	async function translateRightToLeft() {
+		warnIfLangMismatch(rightText, rightLang);
 		setBusy(true);
+		const t0 = performance.now();
 		try {
 			const res = await fetch("http://localhost:4000/translate", {
 				method: "POST",
@@ -121,16 +217,88 @@ export default function Home() {
 			setLeftText("[Error translating]");
 			setLeftTerms([]);
 			setLeftFlags([]);
+			toast.error("Translation failed (right → left).");
 		} finally {
+			const dt = performance.now() - t0;
+			setLastLatencyMs(Math.round(dt));
 			setBusy(false);
+			fetchHealth();
 		}
 	}
 
+	const phraseKey = `${leftLang}->${rightLang}`;
+	const phrases = PHRASEBOOK[phraseKey] || [];
+
 	return (
 		<main className="mx-auto max-w-6xl p-6">
-			<div className="mb-4 rounded-xl border p-3 text-sm">
-				<b>meditongue</b> — Offline medical translator (MVP). Not medical
-				advice.
+			{/* top bar / status */}
+			<div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 text-sm">
+				<div>
+					<b>meditongue</b> — Offline medical translator (MVP). Not medical
+					advice.
+				</div>
+				<div className="flex items-center gap-2">
+					<Badge variant="secondary">
+						{health?.backend ? `Backend: ${health.backend}` : "Backend: …"}
+					</Badge>
+					<Badge variant={health?.ok ? "default" : "destructive"}>
+						{health?.ok ? "API ✓" : "API ✗"}
+					</Badge>
+					{lastLatencyMs != null && (
+						<Badge title="Last request latency">{lastLatencyMs} ms</Badge>
+					)}
+					<Sheet>
+						<SheetTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+							>
+								<Settings className="mr-2 h-4 w-4" />
+								Settings
+							</Button>
+						</SheetTrigger>
+						<SheetContent
+							side="right"
+							className="w-[360px]"
+						>
+							<SheetHeader>
+								<SheetTitle>Settings</SheetTitle>
+							</SheetHeader>
+							<div className="mt-4 space-y-3 text-sm">
+								<div className="flex justify-between">
+									<span>Backend</span>
+									<span className="font-medium">{health?.backend ?? "—"}</span>
+								</div>
+								<div className="flex justify-between">
+									<span>Model</span>
+									<span className="font-medium">{health?.model ?? "—"}</span>
+								</div>
+								<div className="flex justify-between">
+									<span>API Base</span>
+									<span
+										className="truncate font-medium"
+										title={health?.baseUrl || ""}
+									>
+										{health?.baseUrl ?? "—"}
+									</span>
+								</div>
+								<div className="flex justify-between">
+									<span>Last Latency</span>
+									<span className="font-medium">
+										{lastLatencyMs != null ? `${lastLatencyMs} ms` : "—"}
+									</span>
+								</div>
+								<Separator className="my-2" />
+								<Button
+									size="sm"
+									onClick={fetchHealth}
+								>
+									Refresh
+								</Button>
+							</div>
+						</SheetContent>
+					</Sheet>
+				</div>
 			</div>
 
 			{isEmergency && (
@@ -140,6 +308,7 @@ export default function Home() {
 				</div>
 			)}
 
+			{/* language controls */}
 			<div className="mb-4 flex items-center gap-3">
 				<LangSelect
 					label="Left"
@@ -162,6 +331,24 @@ export default function Home() {
 				/>
 			</div>
 
+			{/* Emergency Phrasebook */}
+			{phrases.length > 0 && (
+				<div className="mb-4 flex flex-wrap gap-2">
+					{phrases.map((p, i) => (
+						<Button
+							key={i}
+							size="sm"
+							variant="secondary"
+							onClick={() => setLeftText(p)}
+							title="Insert phrase on the left"
+						>
+							{p}
+						</Button>
+					))}
+				</div>
+			)}
+
+			{/* two-pane layout */}
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<Card className="p-4">
 					<h2 className="text-sm font-medium">Doctor / Side A ({leftLang})</h2>
@@ -190,7 +377,6 @@ export default function Home() {
 						>
 							{busy ? "Translating…" : "Translate →"}
 						</Button>
-
 						<Button
 							variant="outline"
 							onClick={() => {
@@ -203,12 +389,16 @@ export default function Home() {
 						</Button>
 						<Button
 							variant="secondary"
-							onClick={copyLeft}
+							onClick={async () => {
+								await navigator.clipboard.writeText(leftText);
+								toast.success("Copied left pane text.");
+							}}
 							disabled={!leftText.trim()}
 						>
 							Copy
 						</Button>
 					</div>
+
 					{leftTerms.length > 0 && (
 						<div className="mt-3 text-xs">
 							<div className="mb-1 font-medium">Terms</div>
@@ -256,7 +446,6 @@ export default function Home() {
 						>
 							{busy ? "Translating…" : "← Translate"}
 						</Button>
-
 						<Button
 							variant="outline"
 							onClick={() => {
@@ -269,12 +458,16 @@ export default function Home() {
 						</Button>
 						<Button
 							variant="secondary"
-							onClick={copyRight}
+							onClick={async () => {
+								await navigator.clipboard.writeText(rightText);
+								toast.success("Copied right pane text.");
+							}}
 							disabled={!rightText.trim()}
 						>
 							Copy
 						</Button>
 					</div>
+
 					{rightTerms.length > 0 && (
 						<div className="mt-3 text-xs">
 							<div className="mb-1 font-medium">Terms</div>

@@ -16,7 +16,18 @@ const TranslateSchema = z.object({
 });
 
 app.get("/health", (_, res) => {
-	res.json({ backend: process.env.MODEL_BACKEND || "ollama", ok: true });
+	res.json({
+		backend: process.env.MODEL_BACKEND || "ollama",
+		ok: true,
+		model:
+			process.env.MODEL_BACKEND === "openai"
+				? process.env.OPENAI_MODEL || ""
+				: process.env.OLLAMA_MODEL || "",
+		baseUrl:
+			process.env.MODEL_BACKEND === "openai"
+				? process.env.OPENAI_BASE_URL || ""
+				: process.env.OLLAMA_URL || "",
+	});
 });
 
 app.post("/translate", async (req, res) => {
