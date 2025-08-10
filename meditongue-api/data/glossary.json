@@ -1,0 +1,36 @@
+{
+	"en->es": [
+		{
+			"source": "chest pain",
+			"target": "dolor torácico",
+			"note": "Possible cardiac emergency"
+		},
+		{
+			"source": "shortness of breath",
+			"target": "dificultad respiratoria",
+			"note": "Assess airway/breathing"
+		},
+		{
+			"source": "insulin",
+			"target": "insulina",
+			"note": "Medication name; keep unchanged if brand"
+		},
+		{
+			"source": "stroke",
+			"target": "accidente cerebrovascular",
+			"note": "Emergency; act FAST"
+		}
+	],
+	"es->en": [
+		{
+			"source": "dolor torácico",
+			"target": "chest pain",
+			"note": "Possible cardiac emergency"
+		},
+		{
+			"source": "dificultad respiratoria",
+			"target": "shortness of breath",
+			"note": "Assess airway/breathing"
+		}
+	]
+}
