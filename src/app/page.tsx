@@ -39,12 +39,15 @@ export default function Home() {
 	const [rightFlags, setRightFlags] = useState<string[]>([]);
 	const [busy, setBusy] = useState(false);
 
+	const sameLang = useMemo(() => leftLang === rightLang, [leftLang, rightLang]);
+
 	const isEmergency = useMemo(
 		() => leftFlags.includes("EMERGENCY") || rightFlags.includes("EMERGENCY"),
 		[leftFlags, rightFlags]
 	);
 
 	const swap = () => {
+		if (sameLang) return;
 		setLeftLang(rightLang);
 		setRightLang(leftLang);
 		setLeftText(rightText);
@@ -144,9 +147,10 @@ export default function Home() {
 					onChange={setLeftLang}
 				/>
 				<Button
-					variant="outline"
+					variant={sameLang ? "secondary" : "outline"}
 					onClick={swap}
-					title="Swap languages"
+					title={sameLang ? "Languages are identical" : "Swap languages"}
+					disabled={sameLang}
 				>
 					<ArrowLeftRight className="mr-2 h-4 w-4" />
 					Swap
@@ -177,11 +181,16 @@ export default function Home() {
 					/>
 					<div className="mt-3 flex gap-2">
 						<Button
+							variant={leftLang === rightLang ? "secondary" : "default"}
 							onClick={translateLeftToRight}
-							disabled={busy || !leftText.trim()}
+							title={
+								leftLang === rightLang ? "Languages are identical" : "Translate"
+							}
+							disabled={busy || !leftText.trim() || leftLang === rightLang}
 						>
 							{busy ? "Translating…" : "Translate →"}
 						</Button>
+
 						<Button
 							variant="outline"
 							onClick={() => {
@@ -238,11 +247,16 @@ export default function Home() {
 					/>
 					<div className="mt-3 flex gap-2">
 						<Button
+							variant={rightLang === leftLang ? "secondary" : "default"}
 							onClick={translateRightToLeft}
-							disabled={busy || !rightText.trim()}
+							title={
+								rightLang === leftLang ? "Languages are identical" : "Translate"
+							}
+							disabled={busy || !rightText.trim() || rightLang === leftLang}
 						>
 							{busy ? "Translating…" : "← Translate"}
 						</Button>
+
 						<Button
 							variant="outline"
 							onClick={() => {
