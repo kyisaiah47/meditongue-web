@@ -1,4 +1,4 @@
-# meditongue — Offline Medical Translator & Advisor (MVP)
+# MediTongue — Offline Medical Translator & Advisor (MVP)
 
 > **Categories:** Best Local Agent, For Humanity  
 > **One‑liner:** A fully offline, glossary‑aware medical translator that runs locally on your machine. No cloud required.
