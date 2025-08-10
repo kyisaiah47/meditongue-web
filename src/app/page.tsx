@@ -9,6 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 
+// shadcn Select components
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+
 type Term = { source: string; target: string; note?: string };
 
 const LANGS = [
@@ -54,12 +63,12 @@ export default function Home() {
 
 	async function copyLeft() {
 		await navigator.clipboard.writeText(leftText);
-		toast.success("Copied left pane text.");
+		toast("Copied left pane text.");
 	}
 
 	async function copyRight() {
 		await navigator.clipboard.writeText(rightText);
-		toast.success("Copied right pane text.");
+		toast("Copied right pane text.");
 	}
 
 	async function translateLeftToRight() {
@@ -116,7 +125,6 @@ export default function Home() {
 
 	return (
 		<main className="mx-auto max-w-6xl p-6">
-			{/* top bar / disclaimer */}
 			<div className="mb-4 rounded-xl border p-3 text-sm">
 				<b>meditongue</b> — Offline medical translator (MVP). Not medical
 				advice.
@@ -129,7 +137,6 @@ export default function Home() {
 				</div>
 			)}
 
-			{/* language controls */}
 			<div className="mb-4 flex items-center gap-3">
 				<LangSelect
 					label="Left"
@@ -151,14 +158,9 @@ export default function Home() {
 				/>
 			</div>
 
-			{/* two-pane layout */}
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<Card className="p-4">
-					<div className="flex items-center justify-between">
-						<h2 className="text-sm font-medium">
-							Doctor / Side A ({leftLang})
-						</h2>
-					</div>
+					<h2 className="text-sm font-medium">Doctor / Side A ({leftLang})</h2>
 					<Separator className="my-3" />
 					<Label
 						htmlFor="leftArea"
@@ -198,8 +200,6 @@ export default function Home() {
 							Copy
 						</Button>
 					</div>
-
-					{/* term chips */}
 					{leftTerms.length > 0 && (
 						<div className="mt-3 text-xs">
 							<div className="mb-1 font-medium">Terms</div>
@@ -219,11 +219,9 @@ export default function Home() {
 				</Card>
 
 				<Card className="p-4">
-					<div className="flex items-center justify-between">
-						<h2 className="text-sm font-medium">
-							Patient / Side B ({rightLang})
-						</h2>
-					</div>
+					<h2 className="text-sm font-medium">
+						Patient / Side B ({rightLang})
+					</h2>
 					<Separator className="my-3" />
 					<Label
 						htmlFor="rightArea"
@@ -263,8 +261,6 @@ export default function Home() {
 							Copy
 						</Button>
 					</div>
-
-					{/* term chips */}
 					{rightTerms.length > 0 && (
 						<div className="mt-3 text-xs">
 							<div className="mb-1 font-medium">Terms</div>
@@ -299,20 +295,24 @@ function LangSelect({
 	return (
 		<div className="flex items-center gap-2">
 			<span className="text-sm">{label}</span>
-			<select
-				className="rounded-md border bg-background p-2 text-sm"
+			<Select
 				value={value}
-				onChange={(e) => onChange(e.target.value)}
+				onValueChange={onChange}
 			>
-				{LANGS.map((l) => (
-					<option
-						key={l.code}
-						value={l.code}
-					>
-						{l.label}
-					</option>
-				))}
-			</select>
+				<SelectTrigger className="w-[180px]">
+					<SelectValue placeholder="Select language" />
+				</SelectTrigger>
+				<SelectContent>
+					{LANGS.map((l) => (
+						<SelectItem
+							key={l.code}
+							value={l.code}
+						>
+							{l.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 		</div>
 	);
 }
