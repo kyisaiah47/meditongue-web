@@ -33,9 +33,20 @@ export default function Home() {
 	async function translateLeftToRight() {
 		setBusy(true);
 		try {
-			// placeholder until API exists
-			// we'll wire to /translate in Step 2
-			setRightText(`[${leftLang}→${rightLang}] ${leftText}`);
+			const res = await fetch("http://localhost:4000/translate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					fromLang: leftLang,
+					toLang: rightLang,
+					text: leftText,
+				}),
+			});
+			const data = await res.json();
+			setRightText(data.translated || "");
+		} catch (err) {
+			console.error(err);
+			setRightText("[Error translating]");
 		} finally {
 			setBusy(false);
 		}
@@ -44,7 +55,20 @@ export default function Home() {
 	async function translateRightToLeft() {
 		setBusy(true);
 		try {
-			setLeftText(`[${rightLang}→${leftLang}] ${rightText}`);
+			const res = await fetch("http://localhost:4000/translate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					fromLang: rightLang,
+					toLang: leftLang,
+					text: rightText,
+				}),
+			});
+			const data = await res.json();
+			setLeftText(data.translated || "");
+		} catch (err) {
+			console.error(err);
+			setLeftText("[Error translating]");
 		} finally {
 			setBusy(false);
 		}
