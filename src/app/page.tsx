@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
+import { toast } from "sonner";
 
 type Term = { source: string; target: string; note?: string };
 
@@ -44,6 +45,22 @@ export default function Home() {
 		setLeftFlags(rightFlags);
 		setRightFlags(leftFlags);
 	};
+
+	useEffect(() => {
+		if (isEmergency) {
+			toast.error("🚨 EMERGENCY flagged: Consider urgent evaluation.");
+		}
+	}, [isEmergency]);
+
+	async function copyLeft() {
+		await navigator.clipboard.writeText(leftText);
+		toast.success("Copied left pane text.");
+	}
+
+	async function copyRight() {
+		await navigator.clipboard.writeText(rightText);
+		toast.success("Copied right pane text.");
+	}
 
 	async function translateLeftToRight() {
 		setBusy(true);
@@ -173,6 +190,13 @@ export default function Home() {
 						>
 							Clear
 						</Button>
+						<Button
+							variant="secondary"
+							onClick={copyLeft}
+							disabled={!leftText.trim()}
+						>
+							Copy
+						</Button>
 					</div>
 
 					{/* term chips */}
@@ -230,6 +254,13 @@ export default function Home() {
 							}}
 						>
 							Clear
+						</Button>
+						<Button
+							variant="secondary"
+							onClick={copyRight}
+							disabled={!rightText.trim()}
+						>
+							Copy
 						</Button>
 					</div>
 
