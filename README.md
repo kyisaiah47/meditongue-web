@@ -3,6 +3,9 @@
 **Offline AI-Powered Medical Translator (MVP)**  
 _Not medical advice. For emergency communication assistance only._
 
+[![YouTube Demo](https://img.shields.io/badge/▶️%20Watch%20on%20YouTube-red?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=uaKViDVIqts)
+[![Watch the demo](https://img.youtube.com/vi/uaKViDVIqts/maxresdefault.jpg)](https://www.youtube.com/watch?v=uaKViDVIqts)
+
 ---
 
 ## 🚀 Overview
